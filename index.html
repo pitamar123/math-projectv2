@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Math Carnival: Fixed Shop</title>
+    <style>
+        /* --- IMPORTS & VARS --- */
+        @import url('https://fonts.googleapis.com/css2?family=Titan+One&family=Nunito:wght@700;900&display=swap');
+
+        :root {
+            --red: #ff4757;
+            --dark-red: #c0392b;
+            --blue: #3742fa;
+            --dark-blue: #2f3542;
+            --cream: #f1f2f6;
+            --gold: #ffa502;
+            --green: #2ecc71;
+            --shadow: rgba(0,0,0,0.25);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #70a1ff, #5352ed);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- PHONE CONTAINER --- */
+        .app-shell {
+            width: 100%;
+            height: 100%;
+            background-color: var(--cream);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            max-width: 500px;
+            max-height: 900px;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            z-index: 1;
+        }
+
+        @media (min-width: 501px) {
+            .app-shell {
+                border-radius: 30px;
+                height: 95vh;
+                border: 8px solid #2f3542;
+            }
+        }
+
+        /* --- HEADER --- */
+        .roof {
+            flex-shrink: 0;
+            height: 80px;
+            background: repeating-linear-gradient(
+                90deg,
+                var(--red),
+                var(--red) 40px,
+                #fff 40px,
+                #fff 80px
+            );
+            border-bottom: 8px solid var(--dark-red);
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 5px 15px var(--shadow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .roof-title {
+            background: #fff;
+            padding: 5px 15px;
+            border-radius: 20px;
+            border: 3px solid var(--dark-red);
+            font-family: 'Titan One', cursive;
+            color: var(--red);
+            font-size: 1.2rem;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.1);
+        }
+
+        .roof::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 100%;
+            height: 10px;
+            background: radial-gradient(circle, var(--dark-red) 10px, transparent 11px);
+            background-size: 20px 20px;
+            background-position: -10px -10px;
+        }
+
+        /* --- STAGE (SCROLLABLE AREA) --- */
+        .stage {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow-y: auto; /* Enable scrolling */
+            -webkit-overflow-scrolling: touch; /* Smooth scroll on iOS */
+            z-index: 5;
+        }
+
+        /* --- SCREENS --- */
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            /* Removed fixed height so it can scroll naturally */
+            min-height: 100%; 
+            padding-bottom: 40px; /* Space for bottom content */
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .screen.active { display: flex; }
+        @keyframes popIn { from{opacity:0; transform:scale(0.9);} to{opacity:1; transform:scale(1);} }
+
+        /* --- MENU --- */
+        .menu-logo {
+            font-size: 6rem;
+            filter: drop-shadow(0 10px 0 rgba(0,0,0,0.15));
+            margin-bottom: 20px;
+            margin-top: 40px;
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-20px);} }
+
+        h1 {
+            font-family: 'Titan One', cursive;
+            font-size: 3.5rem;
+            color: var(--blue);
+            margin: 0;
+            line-height: 1;
+            text-shadow: 4px 4px 0 #fff;
+            text-align: center;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #7f8c8d;
+            font-weight: 800;
+            margin-bottom: 30px;
+        }
+
+        .play-btn, .shop-btn {
+            width: 100%;
+            padding: 20px;
+            border: none;
+            border-radius: 25px;
+            color: white;
+            font-family: 'Titan One', cursive;
+            font-size: 2rem;
+            transition: transform 0.1s;
+            margin-bottom: 15px;
+            cursor: pointer;
+            position: relative;
+            z-index: 20;
+        }
+
+        .play-btn {
+            background: linear-gradient(#2ecc71, #27ae60);
+            box-shadow: 0 10px 0 #16a085, 0 20px 20px rgba(0,0,0,0.2);
+        }
+        .play-btn:active { transform: translateY(10px); box-shadow: 0 0 0 #16a085; }
+
+        .shop-btn {
+            background: linear-gradient(#f1c40f, #f39c12);
+            box-shadow: 0 10px 0 #d35400, 0 20px 20px rgba(0,0,0,0.2);
+            font-size: 1.8rem;
+        }
+        .shop-btn:active { transform: translateY(10px); box-shadow: 0 0 0 #d35400; }
+
+        /* PRIZE SHELF */
+        .prize-shelf {
+            display: flex; gap: 10px; background: rgba(0,0,0,0.05); padding: 10px;
+            border-radius: 15px; margin-top: 20px; min-height: 60px;
+            justify-content: center; width: 100%; flex-wrap: wrap;
+        }
+        .shelf-item { font-size: 2rem; filter: drop-shadow(0 4px 0 rgba(0,0,0,0.2)); animation: popIn 0.5s; }
+
+        /* --- SHOP STYLES --- */
+        .shop-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        /* NEW CLOSE BUTTON */
+        .close-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-weight: 900;
+            font-size: 1.2rem;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #c0392b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .close-btn:active { transform: translateY(4px); box-shadow: none; }
+
+        .shop-section { width: 100%; margin-bottom: 30px; }
+        .shop-title { 
+            font-weight: 900; color: var(--dark-red); margin-bottom: 10px; 
+            font-size: 1.2rem; border-bottom: 2px dashed #ccc; padding-bottom: 5px; 
+        }
+        
+        .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; }
+        .shop-item { background: #fff; border-radius: 20px; padding: 15px; display: flex; flex-direction: column; align-items: center; box-shadow: 0 5px 0 #bdc3c7; border: 3px solid transparent; transition: transform 0.2s; }
+        .shop-item.equipped { border-color: var(--green); background: #eaffea; }
+        .shop-item.owned-prize { border-color: var(--gold); background: #fff9db; opacity: 0.8; }
+        .shop-preview { width: 60px; height: 60px; border-radius: 50%; margin-bottom: 10px; box-shadow: 0 5px 10px rgba(0,0,0,0.2); }
+        .prize-preview { font-size: 3rem; margin-bottom: 5px; filter: drop-shadow(0 5px 0 rgba(0,0,0,0.1)); }
+        .price-tag { font-weight: 900; color: var(--dark-blue); background: #dfe6e9; padding: 5px 10px; border-radius: 10px; font-size: 0.9rem; }
+        .buy-btn { margin-top: 10px; background: var(--blue); color: white; border: none; padding: 8px 15px; border-radius: 10px; font-weight: bold; width: 100%; cursor: pointer; transition: background 0.2s; }
+        .buy-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        /* BACK BUTTON (Bottom) */
+        .back-btn { background: #ecf0f1; color: #7f8c8d; border: none; padding: 15px; width: 100%; border-radius: 15px; font-weight: 900; margin-top: 20px; margin-bottom: 40px; flex-shrink: 0; cursor: pointer; }
+
+        /* --- HUD --- */
+        .hud-panel { width: 100%; background: #fff; border-radius: 20px; padding: 10px 15px; box-shadow: 0 5px 0 #dcdde1; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .level-badge { font-family: 'Titan One', cursive; font-size: 1.5rem; color: var(--blue); flex-shrink: 0; margin-right: 10px; }
+        .lives-row { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 3px; max-width: 65%; }
+        .heart { font-size: 1.1rem; color: var(--red); line-height: 1; }
+        .heart.lost { filter: grayscale(100%); opacity: 0.3; transform: scale(0.8); }
+
+        /* --- BOARD --- */
+        .chalkboard { background: #2f3542; width: 100%; padding: 25px 15px; border-radius: 20px; border: 6px solid #a4b0be; color: white; font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 2rem; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.3); margin-bottom: auto; margin-top: 10px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; margin-top: 20px; margin-bottom: 20px; }
+        .answer-btn { background: #fff; border: none; border-radius: 25px; aspect-ratio: 1.2 / 1; position: relative; box-shadow: 0 8px 0 #bdc3c7; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: opacity 0.3s, transform 0.3s; }
+        .answer-btn:active { transform: translateY(8px); box-shadow: none; }
+        .target-ring { width: 80%; height: 80%; border-radius: 50%; background: repeating-radial-gradient(var(--red), var(--red) 8px, #fff 9px, #fff 16px); border: 4px solid var(--red); display: flex; align-items: center; justify-content: center; }
+        .answer-text { background: #fff; padding: 5px 10px; border-radius: 10px; font-weight: 900; font-size: 1.3rem; color: #2d3436; box-shadow: 0 3px 5px rgba(0,0,0,0.2); z-index: 2; }
+
+        /* --- BALL --- */
+        .ball { position: fixed; top: 0; left: 0; width: 80px; height: 80px; border-radius: 50%; border: 4px solid #fff; box-shadow: 0 15px 30px rgba(0,0,0,0.6); z-index: 99999; display: none; pointer-events: none; }
+        .ball.style-default { background: radial-gradient(circle at 35% 35%, #ff9f9f, #ff4757); border-color: #c0392b; }
+        .ball.style-default::after { content:''; position:absolute; top:50%; left:-5%; width:110%; height:12px; background:rgba(255,255,255,0.6); transform:translateY(-50%) rotate(-30deg); }
+        .ball.style-blue { background: radial-gradient(circle at 35% 35%, #74b9ff, #0984e3); border-color: #0c2461; }
+        .ball.style-blue::after { content:'★'; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:white; font-size:40px; }
+        .ball.style-gold { background: radial-gradient(circle at 35% 35%, #ffeaa7, #fdcb6e); border-color: #e17055; }
+        .ball.style-gold::after { content:'$'; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:#d35400; font-family:'Titan One'; font-size:40px; }
+        .ball.style-8ball { background: radial-gradient(circle at 35% 35%, #636e72, #2d3436); border-color: #000; }
+        .ball.style-8ball::after { content:'8'; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); background:white; color:black; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; }
+        .ball.style-basketball { background: radial-gradient(circle at 35% 35%, #f39c12, #d35400); border-color: #2d3436; }
+        .ball.style-basketball::after { content:'🏀'; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); font-size: 50px; opacity: 0.7; }
+
+        /* --- TOAST --- */
+        .toast { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); background: #fff; padding: 20px 40px; border-radius: 50px; font-family: 'Titan One', cursive; font-size: 2rem; border: 6px solid var(--blue); box-shadow: 0 15px 40px rgba(0,0,0,0.4); z-index: 1000; transition: transform 0.4s; pointer-events: none; }
+        .toast.pop { transform: translate(-50%, -50%) scale(1); }
+
+        /* --- TICKET BANK --- */
+        .ticket-bank { position: absolute; top: 20px; right: 20px; background: var(--gold); color: #fff; padding: 8px 16px; border-radius: 20px; font-weight: 900; font-size: 1.2rem; border: 3px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 20; }
+        .score-display { font-family: 'Titan One', cursive; font-size: 6rem; color: var(--gold); line-height: 1; text-shadow: 3px 3px 0 var(--dark-blue); }
+        .shake { animation: shake 0.4s; }
+        @keyframes shake { 0%,100%{transform:translateX(0);} 25%{transform:translateX(-10px);} 75%{transform:translateX(10px);} }
+        .confetti { position:fixed; width:12px; height:12px; z-index:99999; animation:fall linear forwards; }
+        @keyframes fall { to { transform:translateY(100vh) rotate(720deg); } }
+
+        /* Shop Animations */
+        @keyframes shopSuccess { 0% {transform:scale(1);} 50% {transform:scale(1.1);background:#fff9db;border-color:var(--gold);} 100% {transform:scale(1);} }
+        .anim-success { animation: shopSuccess 0.4s ease-out; }
+        @keyframes shopFail { 0%,100%{transform:translateX(0);} 25%,75%{transform:translateX(-8px);border-color:var(--red);background:#ffe6e6;} 50%{transform:translateX(8px);border-color:var(--red);background:#ffe6e6;} }
+        .anim-fail { animation: shopFail 0.4s ease-in-out; }
+        @keyframes shopEquip { 0% {transform:scale(1);} 50% {transform:scale(1.05);border-color:var(--green);box-shadow:0 0 15px var(--green);} 100% {transform:scale(1);} }
+        .anim-equip { animation: shopEquip 0.3s ease-out; }
+
+        /* Secret Code */
+        .secret-vault { width: 100%; margin-top: 30px; padding: 20px; background: #dfe6e9; border-radius: 20px; border: 4px dashed #b2bec3; text-align: center; }
+        .secret-input-group { display: flex; gap: 10px; margin-top: 10px; }
+        .secret-input { flex: 1; padding: 12px; border: 3px solid #b2bec3; border-radius: 12px; font-weight: 900; outline:none; }
+        .redeem-btn { background: var(--dark-blue); color: white; border: none; padding: 0 20px; border-radius: 12px; cursor: pointer; }
+
+    </style>
+</head>
+<body>
+
+<div id="projectile" class="ball style-default"></div>
+<div id="toast" class="toast">GOOD!</div>
+
+<div class="app-shell">
+    <div class="roof"><div class="roof-title">MATH CARNIVAL</div></div>
+    <div class="ticket-bank">🎟️ <span id="global-tickets">0</span></div>
+
+    <div class="stage">
+        <div id="menu-screen" class="screen active">
+            <div class="menu-logo">🎡</div>
+            <h1>MATH<br>MASTER</h1>
+            <div class="subtitle">HARD MODE</div>
+            
+            <button class="play-btn" onclick="startGame()">PLAY GAME</button>
+            <button class="shop-btn" onclick="openShop()">PRIZE SHOP</button>
+
+            <div style="width:100%; margin-top:10px;">
+                <div style="font-weight:900; color:#b2bec3; font-size:0.9rem;">MY COLLECTION</div>
+                <div class="prize-shelf" id="menu-prizes">
+                    <span style="color:#bdc3c7; font-size:0.8rem;">No prizes yet...</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="shop-screen" class="screen">
+            <div class="shop-header-row">
+                <h1 style="font-size: 2rem; margin:0;">PRIZE SHOP</h1>
+                <button class="close-btn" onclick="switchScreen('menu-screen')">X</button>
+            </div>
+            
+            <div class="shop-section">
+                <div class="shop-title">BALL SKINS</div>
+                <div class="shop-grid" id="shop-balls"></div>
+            </div>
+
+            <div class="shop-section">
+                <div class="shop-title">COLLECTIBLES</div>
+                <div class="shop-grid" id="shop-collectibles"></div>
+            </div>
+
+            <div class="secret-vault">
+                <div style="font-weight:900; color:#636e72;">SECRET CODE:</div>
+                <div class="secret-input-group">
+                    <input type="text" id="secret-code" class="secret-input" placeholder="...">
+                    <button class="redeem-btn" onclick="redeemSecret()">🔓</button>
+                </div>
+            </div>
+
+            <button class="back-btn" onclick="switchScreen('menu-screen')">BACK TO MENU</button>
+        </div>
+
+        <div id="game-screen" class="screen">
+            <div class="hud-panel">
+                <div class="level-badge">LVL <span id="current-level">1</span></div>
+                <div class="lives-row" id="lives-display"></div>
+            </div>
+            <div class="chalkboard"><span id="q-text">Loading...</span></div>
+            <div class="grid" id="options-grid"></div>
+        </div>
+
+        <div id="end-screen" class="screen">
+            <div class="menu-logo">🏆</div>
+            <h2 style="font-family:'Titan One'; font-size:2.5rem; color:var(--dark-blue); margin:0;">YOU WON</h2>
+            <div class="score-display" id="final-score">0</div>
+            <p style="font-weight:900; color:#bdc3c7;">TICKETS</p>
+            <button class="play-btn" style="background:var(--blue); box-shadow:0 10px 0 #192a56;" onclick="claimTickets()">CLAIM</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- SAFE STORAGE ---
+    let storageEnabled = true;
+    try { localStorage.setItem('test', '1'); localStorage.removeItem('test'); } catch(e) { storageEnabled = false; }
+    function getSaved(key, def) { if(!storageEnabled) return def; const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; }
+    function setSaved(key, val) { if(storageEnabled) localStorage.setItem(key, JSON.stringify(val)); }
+
+    // --- STATE ---
+    let myTickets = parseInt(getSaved('carnivalTickets', 0));
+    let myInventory = getSaved('carnivalInventory', ['default']);
+    let equippedSkin = getSaved('carnivalEquipped', 'default');
+    let redeemedCodes = getSaved('carnivalRedeemedCodes', []);
+
+    if(typeof equippedSkin !== 'string') equippedSkin = 'default';
+
+    document.getElementById('global-tickets').textContent = myTickets;
+    
+    // --- DATA ---
+    const balls = [
+        { id: 'default', name: 'Classic Red', price: 0, styleClass: 'style-default', type: 'skin' },
+        { id: 'blue', name: 'Star Blue', price: 10, styleClass: 'style-blue', type: 'skin' },
+        { id: 'basketball', name: 'Hoops', price: 40, styleClass: 'style-basketball', type: 'skin' },
+        { id: 'gold', name: 'Rich Gold', price: 50, styleClass: 'style-gold', type: 'skin' },
+        { id: '8ball', name: 'Magic 8', price: 100, styleClass: 'style-8ball', type: 'skin' }
+    ];
+
+    const prizes = [
+        { id: 'prize_bear', name: 'Teddy Bear', price: 150, icon: '🧸', type: 'prize' },
+        { id: 'prize_robot', name: 'Toy Robot', price: 200, icon: '🤖', type: 'prize' },
+        { id: 'prize_unicorn', name: 'Unicorn', price: 300, icon: '🦄', type: 'prize' },
+        { id: 'prize_crown', name: 'The Crown', price: 500, icon: '👑', type: 'prize' }
+    ];
+
+    // HARDER QUESTIONS
+    const questions = [
+        { q: "5x + 3 = 28", a: "x = 5" }, { q: "2(x - 4) = 10", a: "x = 9" },
+        { q: "7x - 2 = 4x + 13", a: "x = 5" },
+        { q: "3x + 2x = 25", a: "x = 5" }, { q: "8x - 4 = 3x + 16", a: "x = 4" },
+        { q: "10 - 2x = 4", a: "x = 3" }, { q: "4x + 1 = 2x + 11", a: "x = 5" },
+        { q: "2(x + 5) = 22", a: "x = 6" }, { q: "3(2x - 1) = 27", a: "x = 5" },
+        { q: "5(x - 2) + 3 = 18", a: "x = 5" }, { q: "-3x + 15 = 0", a: "x = 5" },
+        { q: "10 - x = 12", a: "x = -2" }, { q: "x/3 + 4 = 9", a: "x = 15" },
+        { q: "x/4 - 2 = 1", a: "x = 12" }, { q: "x/2 = 8", a: "x = 16" },
+        { q: "4x - 7 > 9", a: "x > 4" }, { q: "3(x + 2) ≤ 15", a: "x ≤ 3" },
+        { q: "6x + 5 ≥ 2x + 21", a: "x ≥ 4" }, { q: "-2x + 10 < 4", a: "x > 3" },
+        { q: "-3x < 12", a: "x > -4" }, { q: "5 - x > 2", a: "x < 3" },
+        { q: "2x - 3 > 7", a: "x > 5" }, { q: "4(x-1) > x+8", a: "x > 4" },
+        { q: "4(x-1) - 2(x+2) > x+3", a: "x > 11" }, { q: "10 - 3(x-2) > 1 - 4x", a: "x > -15" },
+        { q: "(2x-3)/3 = 5", a: "x = 9" }
+    ];
+
+    let level = 1;
+    let lives = 10;
+    let locked = false;
+
+    updateBallSkin();
+    updateMenuPrizes();
+
+    // --- NAVIGATION ---
+    function switchScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        if(id === 'menu-screen') updateMenuPrizes();
+    }
+
+    // --- SECRET CODES ---
+    function redeemSecret() {
+        const input = document.getElementById('secret-code');
+        const code = input.value.trim().toUpperCase();
+        const originalInput = input.value.trim();
+
+        if (code === "") return;
+
+        if (redeemedCodes.includes(code) || redeemedCodes.includes(originalInput)) {
+            showToast("ALREADY USED!", "#e74c3c");
+            shakeSecretBox();
+            return;
+        }
+
+        let reward = 0;
+        let validCode = '';
+
+        if (code === 'JACKPOT') { reward = 3000; validCode = 'JACKPOT'; }
+        else if (originalInput === 'ח5') { reward = 50; validCode = 'ח5'; }
+        else if (code === 'MATH') { reward = 100; validCode = 'MATH'; }
+        else if (code === 'WINNER') { reward = 500; validCode = 'WINNER'; }
+        else {
+            showToast("INVALID CODE", "#ff4757");
+            shakeSecretBox();
+            return;
+        }
+
+        myTickets += reward;
+        redeemedCodes.push(validCode);
+        setSaved('carnivalTickets', myTickets);
+        setSaved('carnivalRedeemedCodes', redeemedCodes);
+        document.getElementById('global-tickets').textContent = myTickets;
+        createConfetti(50);
+        showToast(`+${reward} TICKETS!`, "#f1c40f");
+        input.value = "";
+        
+        if(document.getElementById('shop-screen').classList.contains('active')) renderShop();
+    }
+
+    function shakeSecretBox() {
+        const box = document.querySelector('.secret-vault');
+        box.classList.add('shake');
+        setTimeout(() => box.classList.remove('shake'), 400);
+    }
+
+    // --- SHOP LOGIC ---
+    function openShop() { renderShop(); switchScreen('shop-screen'); }
+
+    function renderShop() {
+        renderSection('shop-balls', balls);
+        renderSection('shop-collectibles', prizes);
+    }
+
+    function renderSection(containerId, items) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = '';
+        items.forEach(item => {
+            const isOwned = myInventory.includes(item.id);
+            const isEquipped = equippedSkin === item.id;
+            
+            const div = document.createElement('div');
+            if (item.type === 'prize' && isOwned) {
+                div.className = `shop-item owned-prize`;
+            } else {
+                div.className = `shop-item ${isEquipped ? 'equipped' : ''}`;
+            }
+            
+            let previewHTML = '';
+            if (item.type === 'skin') {
+                previewHTML = `<div class="shop-preview ball ${item.styleClass}" style="position:relative; display:block; transform:scale(0.8)"></div>`;
+            } else {
+                previewHTML = `<div class="prize-preview">${item.icon}</div>`;
+            }
+
+            let btnHTML = '';
+            if (item.type === 'skin') {
+                if (isEquipped) btnHTML = `<button class="buy-btn" disabled style="background:#2ecc71">EQUIPPED</button>`;
+                else if (isOwned) btnHTML = `<button class="buy-btn" onclick="equipSkin('${item.id}', this)">EQUIP</button>`;
+                else {
+                    const canAfford = myTickets >= item.price;
+                    btnHTML = `<button class="buy-btn" ${canAfford ? '' : 'disabled'} onclick="buyItem('${item.id}', ${item.price}, 'skin', this)">BUY</button>`;
+                }
+            } else {
+                if (isOwned) btnHTML = `<button class="buy-btn" disabled style="background:#f1c40f; color:#2d3436;">OWNED</button>`;
+                else {
+                    const canAfford = myTickets >= item.price;
+                    btnHTML = `<button class="buy-btn" ${canAfford ? '' : 'disabled'} onclick="buyItem('${item.id}', ${item.price}, 'prize', this)">BUY</button>`;
+                }
+            }
+
+            div.innerHTML = `
+                ${previewHTML}
+                <div style="font-weight:bold; margin-bottom:5px;">${item.name}</div>
+                <div class="price-tag">${item.price === 0 ? 'FREE' : item.price + ' 🎟️'}</div>
+                ${btnHTML}
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function buyItem(id, price, type, btn) {
+        const card = btn.parentElement; 
+        if (myTickets >= price) {
+            card.classList.add('anim-success');
+            createConfetti(20);
+            
+            setTimeout(() => {
+                myTickets -= price;
+                myInventory.push(id);
+                setSaved('carnivalTickets', myTickets);
+                setSaved('carnivalInventory', myInventory);
+                document.getElementById('global-tickets').textContent = myTickets;
+                renderShop();
+                showToast("SOLD!", "#f1c40f");
+                card.classList.remove('anim-success');
+                if (type === 'prize') updateMenuPrizes();
+            }, 400); 
+        } else {
+            card.classList.add('anim-fail');
+            showToast("NO TICKETS!", "#ff4757");
+            setTimeout(() => card.classList.remove('anim-fail'), 400);
+        }
+    }
+
+    function equipSkin(id, btn) {
+        const card = btn.parentElement;
+        card.classList.add('anim-equip');
+        
+        setTimeout(() => {
+            equippedSkin = id;
+            setSaved('carnivalEquipped', equippedSkin);
+            updateBallSkin();
+            renderShop();
+            showToast("EQUIPPED!", "#2ecc71");
+            card.classList.remove('anim-equip');
+        }, 300);
+    }
+
+    function updateBallSkin() {
+        const ball = document.getElementById('projectile');
+        ball.className = 'ball'; 
+        const item = balls.find(i => i.id === equippedSkin);
+        if (item) ball.classList.add(item.styleClass);
+    }
+
+    function updateMenuPrizes() {
+        const shelf = document.getElementById('menu-prizes');
+        const ownedPrizes = prizes.filter(p => myInventory.includes(p.id));
+        
+        if (ownedPrizes.length === 0) {
+            shelf.innerHTML = `<span style="color:#bdc3c7; font-size:0.8rem;">No prizes yet...</span>`;
+        } else {
+            shelf.innerHTML = '';
+            ownedPrizes.forEach(p => {
+                const span = document.createElement('div');
+                span.className = 'shelf-item';
+                span.textContent = p.icon;
+                shelf.appendChild(span);
+            });
+        }
+    }
+
+    // --- GAME LOGIC ---
+    function startGame() {
+        level = 1; lives = 10; locked = false;
+        updateHUD(); nextQuestion(); switchScreen('game-screen');
+    }
+
+    function updateHUD() {
+        document.getElementById('current-level').textContent = level;
+        const c = document.getElementById('lives-display');
+        c.innerHTML = '';
+        for(let i=0; i<10; i++) {
+            const heart = document.createElement('div');
+            heart.className = 'heart ' + (i >= lives ? 'lost' : '');
+            heart.innerHTML = '❤️';
+            c.appendChild(heart);
+        }
+    }
+
+    function generateAnswers(correct) {
+        let match = correct.match(/-?\d+/);
+        if (!match) return ["A", "B", "C", "D"];
+
+        let val = parseInt(match[0]);
+        let set = new Set([correct]);
+        
+        while(set.size < 4) {
+            let offset = Math.floor(Math.random() * 10) - 5;
+            if(offset === 0) offset = 1;
+            let wrongVal = val + offset;
+            let wrong = correct.replace(val, wrongVal);
+            set.add(wrong);
+        }
+        return Array.from(set).sort(()=>Math.random()-0.5);
+    }
+
+    function nextQuestion() {
+        const qData = questions[Math.floor(Math.random() * questions.length)];
+        document.getElementById('q-text').textContent = qData.q;
+        const grid = document.getElementById('options-grid');
+        grid.innerHTML = '';
+        const options = generateAnswers(qData.a);
+        options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'answer-btn';
+            btn.innerHTML = `<div class="target-ring"><div class="answer-text">${opt}</div></div>`;
+            btn.onclick = () => handleInput(opt, qData.a, btn);
+            grid.appendChild(btn);
+        });
+        locked = false;
+    }
+
+    function throwBall(target, callback) {
+        const ball = document.getElementById('projectile');
+        const rect = target.getBoundingClientRect();
+        const startX = window.innerWidth / 2 - 40;
+        const startY = window.innerHeight + 60;
+        const endX = rect.left + (rect.width/2) - 40;
+        const endY = rect.top + (rect.height/2) - 40;
+
+        ball.style.display = 'block';
+        ball.style.transition = 'none';
+        ball.style.transform = `translate(${startX}px, ${startY}px) scale(1.5)`;
+        void ball.offsetWidth;
+        requestAnimationFrame(() => {
+            ball.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            ball.style.transform = `translate(${endX}px, ${endY}px) scale(0.8)`;
+        });
+        const onHit = () => {
+            ball.style.display = 'none';
+            ball.removeEventListener('transitionend', onHit);
+            callback();
+        };
+        ball.addEventListener('transitionend', onHit);
+    }
+
+    function showToast(msg, color) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.style.color = color;
+        t.style.borderColor = color;
+        t.classList.add('pop');
+        setTimeout(() => t.classList.remove('pop'), 800);
+    }
+
+    function handleInput(sel, cor, btn) {
+        if(locked) return;
+        locked = true;
+        throwBall(btn, () => {
+            if(sel === cor) {
+                showToast("NICE!", "#2ecc71");
+                level++;
+                createConfetti(15);
+                updateHUD();
+                setTimeout(nextQuestion, 1000);
+            } else {
+                showToast("MISS!", "#ff4757");
+                lives--;
+                updateHUD();
+                document.querySelector('.app-shell').classList.add('shake');
+                setTimeout(()=>document.querySelector('.app-shell').classList.remove('shake'), 400);
+                if(lives <= 0) setTimeout(endGame, 1000);
+                else setTimeout(() => { locked = false; btn.style.opacity = 0.5; }, 600);
+            }
+        });
+    }
+
+    function endGame() {
+        document.getElementById('final-score').textContent = level;
+        createConfetti(50);
+        switchScreen('end-screen');
+    }
+
+    function claimTickets() {
+        myTickets += level;
+        setSaved('carnivalTickets', myTickets);
+        document.getElementById('global-tickets').textContent = myTickets;
+        switchScreen('menu-screen');
+    }
+
+    function createConfetti(amount) {
+        for(let i=0; i<amount; i++) {
+            const c = document.createElement('div');
+            c.className = 'confetti';
+            c.style.left = Math.random()*100 + 'vw';
+            c.style.background = `hsl(${Math.random()*360}, 100%, 50%)`;
+            c.style.animationDuration = (1 + Math.random()*2) + 's';
+            document.body.appendChild(c);
+            setTimeout(()=>c.remove(), 3000);
+        }
+    }
+</script>
+</body>
+</html>
